@@ -96,14 +96,14 @@ class Profile(object):
             profile_req.raise_for_status()
             profile = profile_req.json()
         except requests.Timeout:
-            return ("Connection Timed out while loading "
-                    "profile for %s" % username)
+            return ("Connection Timed out while loading \
+                    profile for %s" % username)
         except requests.ConnectionError:
-            return ("Error in Connection while loading"
-                    " profile for %s" % username)
+            return ("Error in Connection while loading \
+                    profile for %s" % username)
         except requests.HTTPError as e:
-            return ("HTTPError while sending requesting"
-                    " while loading profile for %s" % username)
+            return ("HTTPError while sending requesting\
+                     while loading profile for %s" % username)
         except ValueError:
             return "No JSON found in the request"
 
@@ -127,9 +127,9 @@ class Profile(object):
 
         # if no profile loaded
         if self.username is None:
-            return "No Github profile has been loaded yet. " \
-                   "Please load a Github Profile first to get " \
-                   "a list of their public repositories"
+            return ("No Github profile has been loaded yet. \
+                   Please load a Github Profile first to get \
+                   a list of their public repositories")
 
         gh_repo_url = self.repos_url
         repos_count = 0  # number of repos whose details are fetched

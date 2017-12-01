@@ -127,9 +127,9 @@ class Profile(object):
 
         # if no profile loaded
         if self.username is None:
-            return "No Github profile has been loaded yet. " \
-                   "Please load a Github Profile first to get a " \
-                   "list of their public repositories"
+            return ("No Github profile has been loaded yet.  \
+                   Please load a Github Profile first to get a  \
+                   list of their public repositories")
 
         gh_repo_url = self.repos_url
         repos_count = 0  # number of repos whose details are fetched

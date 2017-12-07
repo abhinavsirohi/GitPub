@@ -161,7 +161,7 @@ class Profile(object):
                 return ("HTTPError while sending requesting while \
                         loading  public repos of %s" % self.username)
             except ValueError:
-                return "No JSON found in the request"
+                return("No JSON found in the request")
 
             repos_count += len(repos_on_page)
             page_number += 1

@@ -52,4 +52,4 @@ def test_get_public_repos():
 
     # validations
     for idx, _ in enumerate(profile.public_repos):
-        assert profile.public_repos[idx].name == correct.public_repos[idx].name
+        assert(profile.public_repos[idx].name == correct.public_repos[idx].name)

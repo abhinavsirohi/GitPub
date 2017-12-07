@@ -152,21 +152,22 @@ class Profile(object):
                 repos_on_page = repos_req.json()
                 repos += repos_on_page
             except requests.Timeout:
-                return ("Connection Timed out while loading"
-                        " public repos of %s" % self.username)
+                return ("Connection Timed out while loading \
+                         public repos of %s" % self.username)
             except requests.ConnectionError:
-                return ("Error in Connection while "
-                        "loading  public repos of %s" % self.username)
+                return ("Error in Connection while \
+                        loading  public repos of %s" % self.username)
             except requests.HTTPError as e:
-                return ("HTTPError while sending requesting while "
-                        "loading  public repos of %s" % self.username)
+                return ("HTTPError while sending requesting while \
+                        loading  public repos of %s" % self.username)
             except ValueError:
                 return "No JSON found in the request"
 
             repos_count += len(repos_on_page)
             page_number += 1
 
-        print("Found %s repositories.\nFetching repo details..." % repos_count)
+        print("Found %s repositories.\n\
+              Fetching repo details..." % repos_count)
 
         self.public_repos = []
 

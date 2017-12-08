@@ -24,7 +24,7 @@ def sort_repos(repo_list):
         greater = sort_repos(
             [repo for repo in repo_list[1:]
              if repo.stargazers_count >= pivot.stargazers_count])
-        return lesser + [pivot] + greater
+        return(lesser + [pivot] + greater)
 
 
 def main(username='defunkt'):

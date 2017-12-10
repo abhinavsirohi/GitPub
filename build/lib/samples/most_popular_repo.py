@@ -18,13 +18,9 @@ def sort_repos(repo_list):
         return []
     else:
         pivot = repo_list[0]
-        lesser = sort_repos(
-            [repo for repo in repo_list[1:]
-             if repo.stargazers_count < pivot.stargazers_count])
-        greater = sort_repos(
-            [repo for repo in repo_list[1:]
-             if repo.stargazers_count >= pivot.stargazers_count])
-        return(lesser + [pivot] + greater)
+        lesser = sort_repos([repo for repo in repo_list[1:] if repo.stargazers_count < pivot.stargazers_count])
+        greater = sort_repos([repo for repo in repo_list[1:] if repo.stargazers_count >= pivot.stargazers_count])
+        return lesser + [pivot] + greater
 
 
 def main(username='defunkt'):
@@ -47,12 +43,10 @@ def main(username='defunkt'):
     profile.get_public_repos()
 
     sorted_repos = reversed(sort_repos(profile.public_repos))
-    print("%s(%s)'s most popular repositories\
-          by stargazers count are:" % (profile.name, profile.username))
+    print ("%s(%s)'s most popular repositories by stargazers count are:" % (profile.name, profile.username))
     for repo in sorted_repos:
-        print("%s (%d stars)" % (repo.name, repo.stargazers_count))
+        print ("%s (%d stars)" % (repo.name, repo.stargazers_count))
     return sorted_repos
-
 
 if __name__ == '__main__':
     sorted_repos = main()

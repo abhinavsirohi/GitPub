@@ -13,9 +13,9 @@ def test_load_gh_profile():
     # define the validation Profile
     correct = gitpub.Profile(username="demfier", name="Gaurav",
                              location="Kharagpur, West Bengal",
-                             email=None, followers_count=10,
+                             email=None, followers_count=19,
                              repos_url="https://api.github.com/users/Demfier/repos",
-                             public_repo_count=14)
+                             public_repo_count=41)
 
     profile = gitpub.Profile()
     # load github profile of the user

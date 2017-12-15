@@ -16,7 +16,7 @@ class Repository(object):
     """Class to represent a Github Repository"""
 
     def __init__(self, name=None, html_url=None, stargazers_count=None,
-                 description=None, home_page=None):
+                 description=None, home_page=None,cursor=None):
         """
         Initializes a `Repository` object
         Parameters
@@ -38,6 +38,7 @@ class Repository(object):
         self.stargazers_count = stargazers_count
         self.description = description
         self.home_page = home_page
+        self.cursor=cursor
 
 
 class Profile(object):
@@ -92,12 +93,13 @@ class Profile(object):
         try:
             url = 'https://api.github.com/graphql'
             json = { 'query' : '{user(login:"' + self.username + '") { name url email location followers{totalCount} repositories{totalCount}}}'}
-            print(json)
             headers = {"Authorization": os.environ['OAUTH_KEY']}
 
             profile = requests.post(url=url, json=json, headers=headers)
+            print(profile.json())
 
             profile = profile.json()['data']['user']
+
 
 
         except requests.Timeout:
@@ -134,7 +136,7 @@ class Profile(object):
             return "No Github profile has been loaded yet. Please load a Github Profile first to get a list of their public repositories"
 
         gh_repo_url = self.repos_url
-        #repos_count = 0  # number of repos whose details are fetched
+        repos_count = 0  # number of repos whose details are fetched
 
 
 
@@ -144,7 +146,7 @@ class Profile(object):
         
         try:
             url = 'https://api.github.com/graphql'
-            json = { 'query' : '{user(login:"' + self.username + '") { repositories(first:100){edges{node{name stargazers{totalCount}description url homepageUrl}}totalCount}}}'}
+            json = { 'query' : '{user(login:"' + self.username + '") {repositories(first:100){edges{ cursor node{ name id stargazers{ totalCount }description url homepageUrl}}totalCount}}}'}
             headers = {"Authorization": os.environ['OAUTH_KEY']}
 
             rep = requests.post(url=url, json=json, headers=headers)
@@ -160,18 +162,18 @@ class Profile(object):
         except ValueError:
             return "No JSON found in the request"
 
-        self.public_repo_count=rep['totalCount']
+
+        
 
         repos = rep['edges']
 
         self.public_repos = []
-
-        print ("Found %s repositories.\nFetching repo details..." % self.public_repo_count)
         
 
         # fill fetched repo details
         for idx in repos:
             repo = Repository()
+            repo.cursor=idx['cursor']
             repo.name = idx['node']['name']
             repo.html_url = idx['node']['url']
             repo.stargazers_count = idx['node']['stargazers']['totalCount']
@@ -180,6 +182,44 @@ class Profile(object):
             self.public_repos.append(repo)
         print ("Loaded all repositories for {}".format(self.username))
 
+        repos_count=self.public_repo_count
+        #print(self.public_repos[-1].cursor)
+        repos_count-=100
+        while(repos_count>0):
 
+            try:
+                url = 'https://api.github.com/graphql'
+                json = { 'query' : '{user(login:"' + self.username + '") {repositories(first:100,after:"' + self.public_repos[-1].cursor + '"){edges{ cursor node{ name id stargazers{ totalCount }description url homepageUrl}}totalCount}}}'}
+                headers = {"Authorization": os.environ['OAUTH_KEY']}
+
+                rep = requests.post(url=url, json=json, headers=headers)
+
+                rep=rep.json()['data']['user']['repositories']
+
+            except requests.Timeout:
+                return ("Connection Timed out while loading public repos of %s" % self.username)
+            except requests.ConnectionError:
+                return ("Error in Connection while loading  public repos of %s" % self.username)
+            except requests.HTTPError as e:
+                return ("HTTPError while sending requesting while loading  public repos of %s" % self.username)
+            except ValueError:
+                return "No JSON found in the request"
+
+            repos = rep['edges']
+
+            for idx in repos:
+                repo = Repository()
+                repo.cursor=idx['cursor']
+                repo.name = idx['node']['name']
+                repo.html_url = idx['node']['url']
+                repo.stargazers_count = idx['node']['stargazers']['totalCount']
+                repo.description = idx['node']['description']
+                repo.home_page = idx['node']['homepageUrl']
+                self.public_repos.append(repo)
+
+            repos_count-=100
+
+
+        print ("Found %s repositories.\nFetching repo details..." % self.public_repo_count)
 
 

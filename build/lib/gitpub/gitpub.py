@@ -16,7 +16,7 @@ class Repository(object):
     """Class to represent a Github Repository"""
 
     def __init__(self, name=None, html_url=None, stargazers_count=None,
-                 description=None, home_page=None):
+                 description=None, home_page=None, cursor=None):
         """
         Initializes a `Repository` object
         Parameters
@@ -38,6 +38,7 @@ class Repository(object):
         self.stargazers_count = stargazers_count
         self.description = description
         self.home_page = home_page
+        self.cursor = cursor
 
 
 class Profile(object):
@@ -92,12 +93,12 @@ class Profile(object):
         try:
             url = 'https://api.github.com/graphql'
             json = { 'query' : '{user(login:"' + self.username + '") { name url email location followers{totalCount} repositories{totalCount}}}'}
-            print(json)
             headers = {"Authorization": os.environ['OAUTH_KEY']}
 
             profile = requests.post(url=url, json=json, headers=headers)
 
             profile = profile.json()['data']['user']
+
 
 
         except requests.Timeout:
@@ -114,7 +115,7 @@ class Profile(object):
         self.location = profile['location']
         self.email = profile['email']
         self.followers_count = profile['followers']['totalCount']
-        #self.repos_url = profile['url']
+        self.repos_url = profile['url']
         self.public_repo_count = profile['repositories']['totalCount']
         print ("Loaded Github profile of %s" % self.username)
 
@@ -123,10 +124,13 @@ class Profile(object):
 
     def get_public_repos(self):
     
-        """    Fetches all the public repository details of a user & stores as an array
-        of github.Repository objects in the `public_repos` attribute of a
-        github.Profile object
-        ------------------------------------------------------------------------"""
+        """
+        Fetches all the public repository details of a user & stores as an
+        array of github.Repository objects in the `public_repos` attribute of
+        a github.Profile object
+        ------------------------------------------------------------------------
+        Parameters: None
+        """
     
 
         # if no profile loaded
@@ -164,8 +168,11 @@ class Profile(object):
         
 
         repos = rep['edges']
-
+        repos_count=self.public_repo_count
         self.public_repos = []
+
+        print("Found %s repositories.\n\
+              Fetching repo details..." % repos_count)
         
 
         # fill fetched repo details
@@ -178,11 +185,9 @@ class Profile(object):
             repo.description = idx['node']['description']
             repo.home_page = idx['node']['homepageUrl']
             self.public_repos.append(repo)
-        print ("Loaded all repositories for {}".format(self.username))
 
-        repos_count=self.public_repo_count
-        #print(self.public_repos[-1].cursor)
-        repos_count-=100
+        
+        
         while(repos_count>0):
 
             try:
@@ -217,5 +222,6 @@ class Profile(object):
 
             repos_count-=100
 
+        print ("Loaded all repositories for {}".format(self.username))
 
-        print ("Found %s repositories.\nFetching repo details..." % self.public_repo_count)
+

@@ -1,15 +1,16 @@
 """
-Module to interact with public github API (https://developer.github.com/guides/getting-started/)
+Module to interact with public github API
+ (https://developer.github.com/guides/getting-started/)
 """
 import requests
 
-# For disabling the InsecurePlatForm warnings (arises when using requests in python 2.x)
+# For disabling the InsecurePlatForm warnings
+# (arises when using requests in python 2.x)
 import requests.packages.urllib3
 requests.packages.urllib3.disable_warnings()
 
 import os
 import requests
-
 
 
 class Repository(object):
@@ -45,7 +46,8 @@ class Profile(object):
     """Class to represent a Github Profile"""
 
     def __init__(self, username=None, name=None, location=None, email=None,
-                 followers_count=None, repos_url=None, public_repos=None, public_repo_count=None):
+                 followers_count=None, repos_url=None, public_repos=None,
+                 public_repo_count=None):
         """
         Initializes a `Profile` object
         Parameters
@@ -102,24 +104,29 @@ class Profile(object):
 
 
         except requests.Timeout:
-            return ("Connection Timed out while loading profile for %s" % username)
+            return("Connection Timed out\
+                    while loading profile for %s" % username)
         except requests.ConnectionError:
-            return ("Error in Connection while loading profile for %s" % username)
+            return("Error in Connection \
+                   while loading profile for %s" % username)
         except requests.HTTPError as e:
-            return ("HTTPError while sending requesting while loading profile for %s" % username)
+            return("HTTPError while sending \
+                     requesting while loading profile for %s" % username)
         except ValueError:
-            return "No JSON found in the request"
+            return("No JSON found in the request")
+        except KeyError:
+            return("No authentication key provided")
+
 
         # fill details
         self.name = profile['name']
         self.location = profile['location']
         self.email = profile['email']
+
         self.followers_count = profile['followers']['totalCount']
-        self.repos_url = profile['url']
+        self.repos_url = "https://api.github.com/users/" + username + "/repos"
         self.public_repo_count = profile['repositories']['totalCount']
         print ("Loaded Github profile of %s" % self.username)
-
-
 
 
     def get_public_repos(self):
@@ -135,7 +142,9 @@ class Profile(object):
 
         # if no profile loaded
         if self.username is None:
-            return "No Github profile has been loaded yet. Please load a Github Profile first to get a list of their public repositories"
+            return("No Github profile has been loaded yet.  \
+                   Please load a Github Profile first to get a  \
+                   list of their public repositories")
 
         gh_repo_url = self.repos_url
         repos_count = 0  # number of repos whose details are fetched
@@ -199,13 +208,16 @@ class Profile(object):
                 rep=rep.json()['data']['user']['repositories']
 
             except requests.Timeout:
-                return ("Connection Timed out while loading public repos of %s" % self.username)
+                return("Connection Timed out while \
+                        loading public repos of %s" % self.username)
             except requests.ConnectionError:
-                return ("Error in Connection while loading  public repos of %s" % self.username)
+                return("Error in Connection while \
+                         loading  public repos of %s" % self.username)
             except requests.HTTPError as e:
-                return ("HTTPError while sending requesting while loading  public repos of %s" % self.username)
+                return("HTTPError while sending requesting while \
+                         loading  public repos of %s" % self.username)
             except ValueError:
-                return "No JSON found in the request"
+                return("No JSON found in the request")
 
             repos = rep['edges']
 
@@ -220,6 +232,7 @@ class Profile(object):
                 self.public_repos.append(repo)
 
             repos_count-=100
+
 
         print ("Loaded all repositories for {}".format(self.username))
 

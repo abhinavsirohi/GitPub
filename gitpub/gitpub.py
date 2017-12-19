@@ -13,7 +13,6 @@ import os
 import requests
 
 
-
 class Repository(object):
     """Class to represent a Github Repository"""
 
@@ -115,6 +114,9 @@ class Profile(object):
                      requesting while loading profile for %s" % username)
         except ValueError:
             return("No JSON found in the request")
+        except KeyError:
+            return("No authentication key provided")
+
 
         # fill details
         self.name = profile['name']
@@ -233,3 +235,6 @@ class Profile(object):
 
 
         print ("Loaded all repositories for {}".format(self.username))
+a=Profile()
+a.load_gh_profile('Demfier')
+print(a.name)

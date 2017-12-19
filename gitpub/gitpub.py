@@ -223,8 +223,3 @@ class Profile(object):
             repos_count-=100
 
         print ("Loaded all repositories for {}".format(self.username))
-
-
-a=Profile()
-a.load_gh_profile('Demfier')
-print(a.repos_url)

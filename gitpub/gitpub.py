@@ -115,7 +115,7 @@ class Profile(object):
         self.location = profile['location']
         self.email = profile['email']
         self.followers_count = profile['followers']['totalCount']
-        self.repos_url = profile['url']
+        self.repos_url = "https://api.github.com/users/" + username + "/repos"
         self.public_repo_count = profile['repositories']['totalCount']
         print ("Loaded Github profile of %s" % self.username)
 
@@ -225,3 +225,6 @@ class Profile(object):
         print ("Loaded all repositories for {}".format(self.username))
 
 
+a=Profile()
+a.load_gh_profile('Demfier')
+print(a.repos_url)

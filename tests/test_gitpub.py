@@ -4,12 +4,12 @@ from ..gitpub import gitpub
 
 def test_load_gh_profile():
     """
-    Tests gitpub.Profile.load_gh_profile() by loading details of the user `demfier`
+    Tests gitpub.Profile.load_gh_profile() by
+    loading details of the user `demfier`
     ------------------------------------------------------------------------------
     Parameters: None
     """
 
-    test_username = 'demfier'
     # define the validation Profile
     correct = gitpub.Profile(username="demfier", name="Gaurav",
                              location="Kharagpur, West Bengal",
@@ -30,13 +30,12 @@ def test_load_gh_profile():
 
 def test_get_public_repos():
     """
-    Tests gitpub.Profile.get_public_repos() by loading public repository details
-    of the user `demfier`
+    Tests gitpub.Profile.get_public_repos() by
+    loading public repository details of the user `demfier`
     ----------------------------------------------------------------------------
     Parameters: None
     """
 
-    test_username = 'demfier'
     # define the validation Profile
     correct = gitpub.Profile(username="demfier", name="Gaurav",
                              location="Kharagpur, West Bengal",
@@ -44,6 +43,7 @@ def test_get_public_repos():
                              followers_count=19,
                              repos_url="https://github.com/Demfier",
                              public_repo_count=41)
+
 
     # get public repos for the validation Profile
     correct.get_public_repos()
@@ -54,4 +54,6 @@ def test_get_public_repos():
 
     # validations
     for idx, _ in enumerate(profile.public_repos):
-        assert profile.public_repos[idx].name == correct.public_repos[idx].name
+
+        assert(profile.public_repos[idx].name == correct.public_repos[idx].name)
+

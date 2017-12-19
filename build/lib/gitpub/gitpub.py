@@ -171,6 +171,8 @@ class Profile(object):
             return ("HTTPError while sending requesting while loading  public repos of %s" % self.username)
         except ValueError:
             return "No JSON found in the request"
+        except KeyError:
+            return("No authentication key provided")
 
 
         

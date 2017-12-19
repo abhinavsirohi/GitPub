@@ -143,7 +143,6 @@ class Profile(object):
 
 
         repos = []  # array to store fetched `Repository`
-        #page_number = 1  to account pagination in the api
 
         
         try:

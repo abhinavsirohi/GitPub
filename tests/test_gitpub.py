@@ -40,7 +40,8 @@ def test_get_public_repos():
     # define the validation Profile
     correct = gitpub.Profile(username="demfier", name="Gaurav",
                              location="Kharagpur, West Bengal",
-                             email="sahu.gaurav719@gmail.com", followers_count=19,
+                             email="sahu.gaurav719@gmail.com", 
+                             followers_count=19,
                              repos_url="https://github.com/Demfier",
                              public_repo_count=41)
 

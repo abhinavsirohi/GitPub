@@ -169,3 +169,4 @@ class Profile(object):
             repo.home_page = repos[idx]['homepage']
             self.public_repos.append(repo)
         print ("Loaded all repositories for %s" % (self.username))
+        

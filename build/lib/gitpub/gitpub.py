@@ -1,23 +1,18 @@
 """
-Module to interact with public github API
- (https://developer.github.com/guides/getting-started/)
+Module to interact with public github API (https://developer.github.com/guides/getting-started/)
 """
 import requests
 
-# For disabling the InsecurePlatForm warnings
-# (arises when using requests in python 2.x)
+# For disabling the InsecurePlatForm warnings (arises when using requests in python 2.x)
 import requests.packages.urllib3
 requests.packages.urllib3.disable_warnings()
-
-import os
-import requests
 
 
 class Repository(object):
     """Class to represent a Github Repository"""
 
     def __init__(self, name=None, html_url=None, stargazers_count=None,
-                 description=None, home_page=None, cursor=None):
+                 description=None, home_page=None):
         """
         Initializes a `Repository` object
         Parameters
@@ -39,15 +34,13 @@ class Repository(object):
         self.stargazers_count = stargazers_count
         self.description = description
         self.home_page = home_page
-        self.cursor = cursor
 
 
 class Profile(object):
     """Class to represent a Github Profile"""
 
     def __init__(self, username=None, name=None, location=None, email=None,
-                 followers_count=None, repos_url=None, public_repos=None,
-                 public_repo_count=None):
+                 followers_count=None, repos_url=None, public_repos=None, public_repo_count=None):
         """
         Initializes a `Profile` object
         Parameters
@@ -88,154 +81,91 @@ class Profile(object):
         username : str
             Username of the person whose profile details to be loaded
         """
-        
+
         self.username = username
 
         # build api url for the user
+        gh_api_url = 'https://api.github.com/users/' + username
         try:
-            url = 'https://api.github.com/graphql'
-            json = { 'query' : '{user(login:"' + self.username + '") { name url email location followers{totalCount} repositories{totalCount}}}'}
-            headers = {"Authorization": os.environ['OAUTH_KEY']}
-
-            profile = requests.post(url=url, json=json, headers=headers)
-
-            profile = profile.json()['data']['user']
-
-
-
+            # start requests session
+            sess = requests.session()
+            profile_req = sess.get(gh_api_url, timeout=50)
+            profile_req.raise_for_status()
+            profile = profile_req.json()
         except requests.Timeout:
-            return("Connection Timed out\
-                    while loading profile for %s" % username)
+            return ("Connection Timed out while loading profile for %s" % username)
         except requests.ConnectionError:
-            return("Error in Connection \
-                   while loading profile for %s" % username)
+            return ("Error in Connection while loading profile for %s" % username)
         except requests.HTTPError as e:
-            return("HTTPError while sending \
-                     requesting while loading profile for %s" % username)
+            return ("HTTPError while sending requesting while loading profile for %s" % username)
         except ValueError:
-            return("No JSON found in the request")
-        except KeyError:
-            return("No authentication key provided")
-
+            return "No JSON found in the request"
 
         # fill details
         self.name = profile['name']
         self.location = profile['location']
         self.email = profile['email']
-
-        self.followers_count = profile['followers']['totalCount']
-        self.repos_url = "https://api.github.com/users/" + username + "/repos"
-        self.public_repo_count = profile['repositories']['totalCount']
+        self.followers_count = profile['followers']
+        self.repos_url = profile['repos_url']
+        self.public_repo_count = profile['public_repos']
         print ("Loaded Github profile of %s" % self.username)
 
-
     def get_public_repos(self):
-    
         """
-        Fetches all the public repository details of a user & stores as an
-        array of github.Repository objects in the `public_repos` attribute of
-        a github.Profile object
+        Fetches all the public repository details of a user & stores as an array
+        of github.Repository objects in the `public_repos` attribute of a
+        github.Profile object
         ------------------------------------------------------------------------
         Parameters: None
         """
-    
 
         # if no profile loaded
         if self.username is None:
-            return("No Github profile has been loaded yet.  \
-                   Please load a Github Profile first to get a  \
-                   list of their public repositories")
+            return "No Github profile has been loaded yet. Please load a Github Profile first to get a list of their public repositories"
 
         gh_repo_url = self.repos_url
         repos_count = 0  # number of repos whose details are fetched
 
-
+        # start requests session
+        sess = requests.session()
 
         repos = []  # array to store fetched `Repository`
+        page_number = 1  # to account pagination in the api
 
-        
-        try:
-            url = 'https://api.github.com/graphql'
-            json = { 'query' : '{user(login:"' + self.username + '") {repositories(first:100){edges{ cursor node{ name id stargazers{ totalCount }description url homepageUrl}}totalCount}}}'}
-            headers = {"Authorization": os.environ['OAUTH_KEY']}
+        while repos_count <= self.public_repo_count:
+            if repos_count == self.public_repo_count:
+                break
+            try:
+                url = gh_repo_url + '?page=' + str(page_number)
+                repos_req = sess.get(url, timeout=50)
+                repos_req.raise_for_status()
 
-            rep = requests.post(url=url, json=json, headers=headers)
+                # get details of repos on the current page
+                repos_on_page = repos_req.json()
+                repos += repos_on_page
+            except requests.Timeout:
+                return ("Connection Timed out while loading public repos of %s" % self.username)
+            except requests.ConnectionError:
+                return ("Error in Connection while loading  public repos of %s" % self.username)
+            except requests.HTTPError as e:
+                return ("HTTPError while sending requesting while loading  public repos of %s" % self.username)
+            except ValueError:
+                return "No JSON found in the request"
 
-            rep=rep.json()['data']['user']['repositories']
+            repos_count += len(repos_on_page)
+            page_number += 1
 
-        except requests.Timeout:
-            return ("Connection Timed out while loading public repos of %s" % self.username)
-        except requests.ConnectionError:
-            return ("Error in Connection while loading  public repos of %s" % self.username)
-        except requests.HTTPError as e:
-            return ("HTTPError while sending requesting while loading  public repos of %s" % self.username)
-        except ValueError:
-            return "No JSON found in the request"
-        except KeyError:
-            return("No authentication key provided")
+        print ("Found %s repositories.\nFetching repo details..." % repos_count)
 
-
-        
-
-        repos = rep['edges']
-        repos_count=self.public_repo_count
         self.public_repos = []
 
-        print("Found %s repositories.\n\
-              Fetching repo details..." % repos_count)
-        
-
         # fill fetched repo details
-        for idx in repos:
+        for idx, _ in enumerate(repos):
             repo = Repository()
-            repo.cursor=idx['cursor']
-            repo.name = idx['node']['name']
-            repo.html_url = idx['node']['url']
-            repo.stargazers_count = idx['node']['stargazers']['totalCount']
-            repo.description = idx['node']['description']
-            repo.home_page = idx['node']['homepageUrl']
+            repo.name = repos[idx]['name']
+            repo.html_url = repos[idx]['html_url']
+            repo.stargazers_count = repos[idx]['stargazers_count']
+            repo.description = repos[idx]['description']
+            repo.home_page = repos[idx]['homepage']
             self.public_repos.append(repo)
-
-        
-        
-        while(repos_count>0):
-
-            try:
-                url = 'https://api.github.com/graphql'
-                json = { 'query' : '{user(login:"' + self.username + '") {repositories(first:100,after:"' + self.public_repos[-1].cursor + '"){edges{ cursor node{ name id stargazers{ totalCount }description url homepageUrl}}totalCount}}}'}
-                headers = {"Authorization": os.environ['OAUTH_KEY']}
-
-                rep = requests.post(url=url, json=json, headers=headers)
-
-                rep=rep.json()['data']['user']['repositories']
-
-            except requests.Timeout:
-                return("Connection Timed out while \
-                        loading public repos of %s" % self.username)
-            except requests.ConnectionError:
-                return("Error in Connection while \
-                         loading  public repos of %s" % self.username)
-            except requests.HTTPError as e:
-                return("HTTPError while sending requesting while \
-                         loading  public repos of %s" % self.username)
-            except ValueError:
-                return("No JSON found in the request")
-
-            repos = rep['edges']
-
-            for idx in repos:
-                repo = Repository()
-                repo.cursor=idx['cursor']
-                repo.name = idx['node']['name']
-                repo.html_url = idx['node']['url']
-                repo.stargazers_count = idx['node']['stargazers']['totalCount']
-                repo.description = idx['node']['description']
-                repo.home_page = idx['node']['homepageUrl']
-                self.public_repos.append(repo)
-
-            repos_count-=100
-
-
-        print ("Loaded all repositories for {}".format(self.username))
-
-
+        print ("Loaded all repositories for %s" % (self.username))
